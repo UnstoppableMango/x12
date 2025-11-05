@@ -2,18 +2,22 @@ package trie
 
 import "strings"
 
-type Edge struct {
-	Label  string
-	Target Node
+type Key interface {
+	string | []byte
 }
 
-type Node []Edge
+type Edge[K Key] struct {
+	Label  K
+	Target Node[K]
+}
 
-func (n Node) IsLeaf() bool {
+type Node[K Key] []Edge[K]
+
+func (n Node[K]) IsLeaf() bool {
 	return len(n) == 0
 }
 
-func (n Node) Lookup(path string) (Node, bool) {
+func (n Node[K]) Lookup(path string) (Node[K], bool) {
 	node, found := n, 0
 	for node != nil && !node.IsLeaf() && found < len(path) {
 		node, found = node.next(path, found)
@@ -22,12 +26,16 @@ func (n Node) Lookup(path string) (Node, bool) {
 	return node, node != nil && node.IsLeaf() && found == len(path)
 }
 
-func (n Node) next(path string, found int) (Node, int) {
+func (n Node[K]) next(path string, found int) (Node[K], int) {
 	for _, edge := range n {
-		if strings.HasPrefix(path[found:], edge.Label) {
+		if hasPrefix(path[found:], edge.Label) {
 			return edge.Target, found + len(edge.Label)
 		}
 	}
 
 	return nil, 0
+}
+
+func hasPrefix[K Key](path string, prefix K) bool {
+	return strings.HasPrefix(path, string(prefix))
 }

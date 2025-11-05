@@ -9,11 +9,11 @@ import (
 
 var _ = Describe("Node", func() {
 	It("should work", func() {
-		root := trie.Node{{
+		root := trie.Node[string]{{
 			Label: "a",
-			Target: trie.Node{{
+			Target: trie.Node[string]{{
 				Label:  "b",
-				Target: trie.Node{},
+				Target: trie.Node[string]{},
 			}},
 		}}
 
