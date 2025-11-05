@@ -1,41 +1,64 @@
 package trie
 
-import "strings"
+import (
+	"iter"
+	"strings"
+
+	"github.com/unstoppablemango/x12/pkg/path"
+)
 
 type Key interface {
 	string | []byte
 }
 
-type Edge[K Key] struct {
-	Label  K
-	Target Node[K]
+type Node[K Key] interface {
+	Edges() iter.Seq[Edge[K]]
+	IsLeaf() bool
 }
 
-type Node[K Key] []Edge[K]
-
-func (n Node[K]) IsLeaf() bool {
-	return len(n) == 0
+type Edge[K Key] interface {
+	Len() int
+	Prefixes(path K) bool
+	Target() Node[K]
 }
 
-func (n Node[K]) Lookup(path K) (Node[K], bool) {
+type edge[K Key, T any] struct {
+	label  K
+	target node[K, T]
+}
+
+type node[K Key, T any] struct {
+	edges []edge[K, T]
+	value T
+}
+
+func (n node[K, T]) IsLeaf() bool {
+	return len(n.edges) == 0
+}
+
+func (n node[K, T]) Lookup(path K) (T, bool) {
 	node, found := n, 0
-	for node != nil && !node.IsLeaf() && found < len(path) {
+	for !node.IsLeaf() && found < len(path) {
 		node, found = node.next(path, found)
 	}
 
-	return node, node != nil && node.IsLeaf() && found == len(path)
+	return node.value, node.IsLeaf() && found == len(path)
 }
 
-func (n Node[K]) next(path K, found int) (Node[K], int) {
-	for _, edge := range n {
-		if hasPrefix(path[found:], edge.Label) {
-			return edge.Target, found + len(edge.Label)
+func (n node[K, T]) next(path K, found int) (node[K, T], int) {
+	for _, edge := range n.edges {
+		if hasPrefix(path[found:], edge.label) {
+			return edge.target, found + len(edge.label)
 		}
 	}
 
-	return nil, 0
+	return node[K, T]{}, 0
 }
 
 func hasPrefix[K Key](path K, prefix K) bool {
 	return strings.HasPrefix(string(path), string(prefix))
+}
+
+func New[K Key, T any]() path.Trie[K, T] {
+	return node[K, T]{}
 }
