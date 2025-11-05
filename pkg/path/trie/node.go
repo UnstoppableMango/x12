@@ -1,7 +1,6 @@
 package trie
 
 import (
-	"iter"
 	"strings"
 
 	"github.com/unstoppablemango/x12/pkg/path"
@@ -9,17 +8,6 @@ import (
 
 type Key interface {
 	string | []byte
-}
-
-type Node[K Key] interface {
-	Edges() iter.Seq[Edge[K]]
-	IsLeaf() bool
-}
-
-type Edge[K Key] interface {
-	Len() int
-	Prefixes(path K) bool
-	Target() Node[K]
 }
 
 type edge[K Key, T any] struct {
@@ -32,8 +20,12 @@ type node[K Key, T any] struct {
 	value T
 }
 
-func (n node[K, T]) IsLeaf() bool {
-	return len(n.edges) == 0
+func (n *node[K, T]) Insert(path K, value T) {
+	panic("not implemented")
+}
+
+func (n *node[K, T]) IsLeaf() bool {
+	return n != nil && len(n.edges) == 0
 }
 
 func (n node[K, T]) Lookup(path K) (T, bool) {
@@ -60,5 +52,9 @@ func hasPrefix[K Key](path K, prefix K) bool {
 }
 
 func New[K Key, T any]() path.Trie[K, T] {
-	return node[K, T]{}
+	return &node[K, T]{}
+}
+
+func Node[K Key, T any](v T) path.Trie[K, T] {
+	return &node[K, T]{value: v}
 }
