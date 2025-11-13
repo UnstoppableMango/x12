@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/unstoppablemango/x12/pkg/path/trie"
+	"github.com/unstoppablemango/x12/pkg/trie"
 )
 
 var _ = Describe("Node", func() {
