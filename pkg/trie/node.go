@@ -46,6 +46,11 @@ func hasPrefix[K Key](path K, prefix K) bool {
 	return strings.HasPrefix(string(path), string(prefix))
 }
 
+type Trie[K Key, T any] struct {
+	root  Node[K, T]
+	label K
+}
+
 func New[K Key, T any]() *Node[K, T] {
 	return &Node[K, T]{}
 }
@@ -55,5 +60,9 @@ func Single[K Key, T any](v T) *Node[K, T] {
 }
 
 func Iter[K Key, T any](node *Node[K, T]) iter.Seq2[K, T] {
+	if node == nil {
+		return nil
+	}
+
 	return nil
 }

@@ -14,7 +14,7 @@ func (p Path) String() string {
 	return string(p)
 }
 
-type Trie[Key, Node any] interface {
+type Routes[Key, Node any] interface {
 	Insert(path Key, value Node)
 	Lookup(path Key) (Node, bool)
 }
@@ -26,7 +26,7 @@ type Context interface {
 type Action func(Context) error
 
 type app struct {
-	routes Trie[Path, Action]
+	Routes[Path, Action]
 }
 
 // Handle implements X12.
