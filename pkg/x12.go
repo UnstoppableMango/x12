@@ -2,7 +2,9 @@ package x12
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/unmango/go/option"
 	"github.com/unstoppablemango/x12/pkg/trie"
 )
 
@@ -17,7 +19,6 @@ func (p Path) String() string {
 }
 
 type Routes[Key, Node any] interface {
-	Insert(path Key, value Node)
 	Lookup(path Key) (Node, bool)
 }
 
@@ -25,17 +26,35 @@ type Context interface {
 	Context() context.Context
 }
 
-type Action func(Context) error
+type (
+	Action       func(Context) error
+	ErrorHandler func(Path) error
+)
 
 type app struct {
 	Routes[Path, Action]
+	notFound ErrorHandler
 }
+
+type Option func(*app)
 
 // Handle implements X12.
 func (a *app) Handle(ctx Context, path Path) error {
-	panic("unimplemented")
+	if action, found := a.Lookup(path); found {
+		return action(ctx)
+	} else {
+		return a.notFound(path)
+	}
 }
 
-func NewApp() X12 {
-	return &app{trie.New[Path, Action]()}
+func New(options ...Option) X12 {
+	app := &app{
+		Routes: trie.New[Path, Action](),
+		notFound: func(p Path) error {
+			return fmt.Errorf("no route found for path: %s", p)
+		},
+	}
+
+	option.ApplyAll(app, options)
+	return app
 }

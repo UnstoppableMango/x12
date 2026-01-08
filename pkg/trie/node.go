@@ -1,3 +1,5 @@
+// Packages trie implements a generic trie data structure. It is unoptimized and
+// mostly for fun. It also serves as a default routing mechanism for the x12 package.
 package trie
 
 import (
@@ -58,11 +60,6 @@ func (n *Node[K, T]) next(path K, found int) (*Node[K, T], int) {
 
 func hasPrefix[K Key](path K, prefix K) bool {
 	return strings.HasPrefix(string(path), string(prefix))
-}
-
-type Trie[K Key, T any] struct {
-	root  Node[K, T]
-	label K
 }
 
 func New[K Key, T any]() *Node[K, T] {
