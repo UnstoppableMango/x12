@@ -8,18 +8,29 @@ import (
 )
 
 var _ = Describe("Node", func() {
-	It("should work", func() {
-		// root := trie.Node[string]{{
-		// 	label: "a",
-		// 	target: trie.Node[string]{{
-		// 		label:  "b",
-		// 		target: trie.Node[string]{},
-		// 	}},
-		// }}
-		root := trie.New[string, string]()
+	Describe("Lookup", func() {
+		When("the trie is empty", func() {
+			It("should return false", func() {
+				root := trie.New[string, string]()
 
-		_, found := root.Lookup("ab")
+				_, found := root.Lookup("ab")
 
-		Expect(found).To(BeFalse())
+				Expect(found).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("Insert", func() {
+		When("inserting a new path", func() {
+			It("should be retrievable", func() {
+				root := trie.New[string, string]()
+				root.Insert("ab", "value")
+
+				value, found := root.Lookup("ab")
+
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal("value"))
+			})
+		})
 	})
 })

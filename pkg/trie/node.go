@@ -16,30 +16,44 @@ type Node[K Key, T any] struct {
 }
 
 func (n *Node[K, T]) Insert(path K, value T) {
-	panic("not implemented")
+	if node, found := n.lookup(path); found {
+		node.value = value
+	} else {
+		n.edges = map[K]Node[K, T]{
+			path: {value: value},
+		}
+	}
 }
 
 func (n *Node[K, T]) isLeaf() bool {
 	return n != nil && len(n.edges) == 0
 }
 
-func (n Node[K, T]) Lookup(path K) (T, bool) {
+func (n Node[K, T]) Lookup(path K) (val T, found bool) {
+	if node, found := n.lookup(path); found {
+		return node.value, true
+	} else {
+		return val, false
+	}
+}
+
+func (n *Node[K, T]) lookup(path K) (*Node[K, T], bool) {
 	node, found := n, 0
 	for !node.isLeaf() && found < len(path) {
 		node, found = node.next(path, found)
 	}
 
-	return node.value, node.isLeaf() && found == len(path)
+	return node, node.isLeaf() && found == len(path)
 }
 
-func (n Node[K, T]) next(path K, found int) (Node[K, T], int) {
+func (n *Node[K, T]) next(path K, found int) (*Node[K, T], int) {
 	for label, edge := range n.edges {
 		if hasPrefix(path[found:], label) {
-			return edge, found + len(label)
+			return &edge, found + len(label)
 		}
 	}
 
-	return Node[K, T]{}, 0
+	return &Node[K, T]{}, 0
 }
 
 func hasPrefix[K Key](path K, prefix K) bool {
