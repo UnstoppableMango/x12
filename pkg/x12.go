@@ -2,6 +2,8 @@ package x12
 
 import (
 	"context"
+
+	"github.com/unstoppablemango/x12/pkg/trie"
 )
 
 type X12 interface {
@@ -35,5 +37,5 @@ func (a *app) Handle(ctx Context, path Path) error {
 }
 
 func NewApp() X12 {
-	return &app{}
+	return &app{trie.New[Path, Action]()}
 }

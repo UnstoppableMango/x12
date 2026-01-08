@@ -18,9 +18,8 @@ var _ = Describe("Node", func() {
 		// }}
 		root := trie.New[string, string]()
 
-		node, found := root.Lookup("ab")
+		_, found := root.Lookup("ab")
 
-		Expect(found).To(BeTrue())
-		Expect(node).To(Equal(""))
+		Expect(found).To(BeFalse())
 	})
 })

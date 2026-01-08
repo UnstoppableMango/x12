@@ -7,7 +7,7 @@ import (
 
 type Key interface {
 	comparable
-	string | []byte
+	~string | []byte
 }
 
 type Node[K Key, T any] struct {
