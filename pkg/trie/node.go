@@ -3,6 +3,7 @@
 package trie
 
 import (
+	"fmt"
 	"iter"
 	"strings"
 )
@@ -75,5 +76,40 @@ func Iter[K Key, T any](node *Node[K, T]) iter.Seq2[K, T] {
 		return nil
 	}
 
-	return nil
+	return func(yield func(K, T) bool) {
+		Walk(node, func(key K, value T) error {
+			if !yield(key, value) {
+				return fmt.Errorf("yield stopped")
+			} else {
+				return nil
+			}
+		})
+	}
+}
+
+func Walk[K Key, T any](node *Node[K, T], fn func(K, T) error) {
+	if node == nil {
+		return
+	}
+
+	var walk func(n *Node[K, T], prefix K)
+	walk = func(n *Node[K, T], prefix K) {
+		if n.isLeaf() {
+			fn(prefix, n.value)
+			return
+		}
+
+		for label, edge := range n.edges {
+			var newPrefix K
+			switch p := any(prefix).(type) {
+			case string:
+				newPrefix = K(p + string(label))
+			case []byte:
+				newPrefix = K(append(p, label...))
+			}
+			walk(&edge, newPrefix)
+		}
+	}
+
+	walk(node, *new(K))
 }
