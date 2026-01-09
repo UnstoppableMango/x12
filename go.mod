@@ -7,6 +7,7 @@ tool github.com/onsi/ginkgo/v2/ginkgo
 require (
 	github.com/onsi/ginkgo/v2 v2.27.3
 	github.com/onsi/gomega v1.38.3
+	github.com/plar/go-adaptive-radix-tree/v2 v2.0.4
 	github.com/unmango/go v0.10.3
 )
 

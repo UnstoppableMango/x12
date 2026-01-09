@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	art "github.com/plar/go-adaptive-radix-tree/v2"
 	"github.com/unmango/go/option"
-	"github.com/unstoppablemango/x12/pkg/trie"
 )
 
-type X12 interface {
+type Handler interface {
 	Handle(ctx Context, path Path) error
 }
 
@@ -47,9 +47,9 @@ func (a *app) Handle(ctx Context, path Path) error {
 	}
 }
 
-func New(options ...Option) X12 {
+func New(options ...Option) Handler {
 	app := &app{
-		Routes: trie.New[Path, Action](),
+		Routes: art.New(),
 		notFound: func(p Path) error {
 			return fmt.Errorf("no route found for path: %s", p)
 		},
