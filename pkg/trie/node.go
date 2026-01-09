@@ -67,6 +67,18 @@ func New[K Key, T any]() *Node[K, T] {
 	return &Node[K, T]{}
 }
 
+func Concat[K Key, T any](node *Node[K, T], m map[K]T) {
+	for path, value := range m {
+		node.Insert(path, value)
+	}
+}
+
+func FromMap[K Key, T any](m map[K]T) *Node[K, T] {
+	root := New[K, T]()
+	Concat(root, m)
+	return root
+}
+
 func Single[K Key, T any](v T) *Node[K, T] {
 	return &Node[K, T]{value: v}
 }

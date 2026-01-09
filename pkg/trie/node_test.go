@@ -31,6 +31,20 @@ var _ = Describe("Node", func() {
 				Expect(found).To(BeTrue())
 				Expect(value).To(Equal("value"))
 			})
+
+			It("should be retrievable", func() {
+				root := trie.New[string, string]()
+				root.Insert("ab", "value")
+				root.Insert("abc", "value2")
+
+				value, found := root.Lookup("ab")
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal("value"))
+
+				value, found = root.Lookup("abc")
+				Expect(found).To(BeTrue())
+				Expect(value).To(Equal("value2"))
+			})
 		})
 	})
 })
