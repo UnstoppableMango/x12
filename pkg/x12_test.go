@@ -9,7 +9,9 @@ import (
 
 var _ = Describe("X12", func() {
 	It("should work", func() {
-		app := x12.New()
+		app := x12.New(x12.WithDefault(func(t x12.Trie[*x12.Request]) {
+
+		}))
 
 		Expect(app).NotTo(BeNil())
 	})

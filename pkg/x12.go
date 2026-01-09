@@ -8,48 +8,60 @@ import (
 	"github.com/unmango/go/option"
 )
 
-type Handler interface {
-	Handle(ctx Context, path Path) error
-}
-
-type Path string
+type (
+	Action[R Req]      func(R) error
+	Builder[R Req]     func(Trie[R])
+	ErrorHandler       func(Path) error
+	HandlerFunc[R Req] func(Path, R) error
+	Path               []byte
+	Paths[R Req]       func(Path) (Action[R], bool)
+	Trie[R Req]        func(Path, Action[R])
+)
 
 func (p Path) String() string {
 	return string(p)
 }
 
-type Routes[Key, Node any] interface {
-	Lookup(path Key) (Node, bool)
+func (p Path) key() art.Key {
+	return art.Key(p)
 }
 
-type Context interface {
+type Handler[R Req] interface {
+	Handle(path Path, req R) error
+}
+
+func (handle HandlerFunc[R]) Handle(path Path, req R) error {
+	return handle(path, req)
+}
+
+type Req interface {
 	Context() context.Context
 }
 
-type (
-	Action       func(Context) error
-	ErrorHandler func(Path) error
-)
+type Request struct {
+	ctx context.Context
+}
 
-type app struct {
-	Routes[Path, Action]
+func NewRequest(ctx context.Context) *Request {
+	return &Request{ctx: ctx}
+}
+
+func (r *Request) Context() context.Context {
+	return r.ctx
+}
+
+type app[R Req] struct {
+	lookup   Paths[R]
 	notFound ErrorHandler
 }
 
-type Option func(*app)
+type Option[R Req] func(*app[R])
 
-// Handle implements X12.
-func (a *app) Handle(ctx Context, path Path) error {
-	if action, found := a.Lookup(path); found {
-		return action(ctx)
-	} else {
-		return a.notFound(path)
-	}
-}
-
-func New(options ...Option) Handler {
-	app := &app{
-		Routes: art.New(),
+func New[R Req](options ...Option[R]) Handler[R] {
+	app := &app[R]{
+		lookup: func(p Path) (Action[R], bool) {
+			return nil, false
+		},
 		notFound: func(p Path) error {
 			return fmt.Errorf("no route found for path: %s", p)
 		},
@@ -57,4 +69,33 @@ func New(options ...Option) Handler {
 
 	option.ApplyAll(app, options)
 	return app
+}
+
+// Handle implements X12.
+func (a *app[R]) Handle(path Path, req R) error {
+	if action, found := a.lookup(path); found {
+		return action(req)
+	} else {
+		return a.notFound(path)
+	}
+}
+
+func With[R Req](build Builder[R]) Option[R] {
+	return func(a *app[R]) {
+		trie := art.New()
+		build(func(path Path, action Action[R]) {
+			trie.Insert(path.key(), action)
+		})
+
+		a.lookup = func(path Path) (Action[R], bool) {
+			if val, found := trie.Search(path.key()); found {
+				return val.(Action[R]), true
+			}
+			return nil, false
+		}
+	}
+}
+
+func WithDefault(build Builder[*Request]) Option[*Request] {
+	return With(build)
 }
