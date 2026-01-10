@@ -1,6 +1,6 @@
 module github.com/unstoppablemango/x12
 
-go 1.25.3
+go 1.25.5
 
 tool github.com/onsi/ginkgo/v2/ginkgo
 
