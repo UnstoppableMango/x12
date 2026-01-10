@@ -18,9 +18,8 @@ var _ = Describe("X12", func() {
 
 	It("should create an action", func() {
 		var flag bool
-		app := x12.New(x12.HandleFunc("/", func(s *x12.State) error {
+		app := x12.New(x12.HandleFunc("/", func(s *x12.State) {
 			flag = true
-			return nil
 		}))
 
 		app.Handle(x12.NewState(context.TODO(), "/"))

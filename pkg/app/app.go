@@ -10,7 +10,7 @@ import (
 
 type (
 	Path                 = trie.Key
-	HandlerFunc[T State] func(T) error
+	HandlerFunc[T State] func(T)
 
 	Add[T State] = trie.Insert[Path, Handler[T]]
 )
@@ -21,11 +21,11 @@ type Trie[T State] interface {
 }
 
 type Handler[T State] interface {
-	Handle(state T) error
+	Handle(state T)
 }
 
-func (handle HandlerFunc[T]) Handle(state T) error {
-	return handle(state)
+func (handle HandlerFunc[T]) Handle(state T) {
+	handle(state)
 }
 
 type State interface {
@@ -35,7 +35,7 @@ type State interface {
 
 type App[T State] struct {
 	trie     Trie[T]
-	notFound func(Path) error
+	notFound func(Path)
 }
 
 type Option[T State] func(*App[T])
@@ -43,8 +43,8 @@ type Option[T State] func(*App[T])
 func New[T State](options ...Option[T]) *App[T] {
 	app := &App[T]{
 		trie: trie.New[Handler[T]](),
-		notFound: func(p Path) error {
-			return fmt.Errorf("no route found for path: %s", p)
+		notFound: func(p Path) {
+			panic(fmt.Sprintf("no route found for path: %s", p))
 		},
 	}
 
@@ -52,12 +52,12 @@ func New[T State](options ...Option[T]) *App[T] {
 	return app
 }
 
-func (a *App[T]) Handle(state T) error {
+func (a *App[T]) Handle(state T) {
 	path := state.Path()
 	if handler, found := a.trie.Lookup(path); found {
-		return handler.Handle(state)
+		handler.Handle(state)
 	} else {
-		return a.notFound(path)
+		a.notFound(path)
 	}
 }
 

@@ -7,16 +7,11 @@ import (
 )
 
 type (
-	Handler = app.Handler[*State]
-	Option  = app.Option[*State]
-	Add     = app.Add[*State]
-
-	HandlerFunc func(*State) error
+	Handler     = app.Handler[*State]
+	HandlerFunc = app.HandlerFunc[*State]
+	Option      = app.Option[*State]
+	Add         = app.Add[*State]
 )
-
-func (handle HandlerFunc) Handle(state *State) error {
-	return handle(state)
-}
 
 type State struct {
 	ctx  context.Context
@@ -47,6 +42,6 @@ func Handle(path string, handler Handler) Option {
 	return app.Handle(app.Path(path), handler)
 }
 
-func HandleFunc(path string, handler func(*State) error) Option {
+func HandleFunc(path string, handler func(*State)) Option {
 	return Handle(path, HandlerFunc(handler))
 }
