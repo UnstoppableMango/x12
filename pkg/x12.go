@@ -7,20 +7,32 @@ import (
 )
 
 type (
-	Action      = app.Action[*State]
-	Handler     = app.Handler[*State]
-	HandlerFunc = app.HandlerFunc[*State]
-	Path        = app.Path
-	Add         = app.Add[*State]
-	Option      = app.Option[*State]
+	Handler = app.Handler[*State]
+	Option  = app.Option[*State]
+	Add     = app.Add[*State]
+
+	HandlerFunc func(*State) error
 )
 
+func (handle HandlerFunc) Handle(state *State) error {
+	return handle(state)
+}
+
 type State struct {
-	ctx context.Context
+	ctx  context.Context
+	path string
+}
+
+func NewState(ctx context.Context, path string) *State {
+	return &State{ctx, path}
 }
 
 func (r *State) Context() context.Context {
 	return r.ctx
+}
+
+func (r *State) Path() app.Path {
+	return app.Path(r.path)
 }
 
 func New(options ...Option) Handler {
@@ -31,6 +43,10 @@ func With(build func(Add)) Option {
 	return app.With(build)
 }
 
-func Handle(path Path, handler Handler) Option {
-	return app.Handle(path, handler)
+func Handle(path string, handler Handler) Option {
+	return app.Handle(app.Path(path), handler)
+}
+
+func HandleFunc(path string, handler func(*State) error) Option {
+	return Handle(path, HandlerFunc(handler))
 }

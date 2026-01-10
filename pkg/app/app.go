@@ -10,27 +10,27 @@ import (
 
 type (
 	Path                 = trie.Key
-	Action[T State]      func(T) error
-	HandlerFunc[T State] func(Path, T) error
+	HandlerFunc[T State] func(T) error
 
-	Add[T State] = trie.Insert[Path, Action[T]]
+	Add[T State] = trie.Insert[Path, Handler[T]]
 )
 
 type Trie[T State] interface {
-	Lookup(Path) (Action[T], bool)
-	Insert(Path, Action[T])
+	Lookup(Path) (Handler[T], bool)
+	Insert(Path, Handler[T])
 }
 
 type Handler[T State] interface {
-	Handle(path Path, state T) error
+	Handle(state T) error
 }
 
-func (handle HandlerFunc[T]) Handle(path Path, state T) error {
-	return handle(path, state)
+func (handle HandlerFunc[T]) Handle(state T) error {
+	return handle(state)
 }
 
 type State interface {
 	Context() context.Context
+	Path() Path
 }
 
 type App[T State] struct {
@@ -42,7 +42,7 @@ type Option[T State] func(*App[T])
 
 func New[T State](options ...Option[T]) *App[T] {
 	app := &App[T]{
-		trie: trie.New[Action[T]](),
+		trie: trie.New[Handler[T]](),
 		notFound: func(p Path) error {
 			return fmt.Errorf("no route found for path: %s", p)
 		},
@@ -52,17 +52,17 @@ func New[T State](options ...Option[T]) *App[T] {
 	return app
 }
 
-// Handle implements X12.
-func (a *App[T]) Handle(path Path, state T) error {
-	if action, found := a.trie.Lookup(path); found {
-		return action(state)
+func (a *App[T]) Handle(state T) error {
+	path := state.Path()
+	if handler, found := a.trie.Lookup(path); found {
+		return handler.Handle(state)
 	} else {
 		return a.notFound(path)
 	}
 }
 
-func (a *App[T]) Insert(path Path, action Action[T]) {
-	a.trie.Insert(path, action)
+func (a *App[T]) Insert(path Path, handler Handler[T]) {
+	a.trie.Insert(path, handler)
 }
 
 func With[T State](build func(Add[T])) Option[T] {
@@ -72,13 +72,11 @@ func With[T State](build func(Add[T])) Option[T] {
 }
 
 func Handle[T State](path Path, handler Handler[T]) Option[T] {
-	return HandleFunc(path, handler.Handle)
+	return With(func(add Add[T]) {
+		add(path, handler)
+	})
 }
 
-func HandleFunc[T State](path Path, handle HandlerFunc[T]) Option[T] {
-	return With(func(add Add[T]) {
-		add(path, func(state T) error {
-			return handle(path, state)
-		})
-	})
+func HandleFunc[T State](path Path, handler HandlerFunc[T]) Option[T] {
+	return Handle(path, handler)
 }

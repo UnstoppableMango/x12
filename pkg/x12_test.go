@@ -1,6 +1,8 @@
 package x12_test
 
 import (
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -8,9 +10,21 @@ import (
 )
 
 var _ = Describe("X12", func() {
-	It("should work", func() {
+	It("should create an app", func() {
 		app := x12.New()
 
 		Expect(app).NotTo(BeNil())
+	})
+
+	It("should create an action", func() {
+		var flag bool
+		app := x12.New(x12.HandleFunc("/", func(s *x12.State) error {
+			flag = true
+			return nil
+		}))
+
+		app.Handle(x12.NewState(context.TODO(), "/"))
+
+		Expect(flag).To(BeTrue())
 	})
 })
