@@ -2,15 +2,14 @@ package app
 
 import (
 	"fmt"
+	"iter"
 
 	"github.com/unmango/go/option"
 	"github.com/unstoppablemango/x12/pkg/trie"
 )
 
 type (
-	Path                 = trie.Key
-	HandlerFunc[T State] func(T)
-
+	Path         = trie.Key
 	Add[T State] = trie.Insert[Path, Handler[T]]
 )
 
@@ -22,6 +21,8 @@ type Trie[T State] interface {
 type Handler[T State] interface {
 	Handle(state T)
 }
+
+type HandlerFunc[T State] func(T)
 
 func (handle HandlerFunc[T]) Handle(state T) {
 	handle(state)
@@ -72,6 +73,14 @@ func With[T State](build func(Add[T])) Option[T] {
 func Handle[T State](path Path, handler Handler[T]) Option[T] {
 	return With(func(add Add[T]) {
 		add(path, handler)
+	})
+}
+
+func HandleAll[T State](handlers iter.Seq2[Path, Handler[T]]) Option[T] {
+	return With(func(add Add[T]) {
+		for p, h := range handlers {
+			add(p, h)
+		}
 	})
 }
 
