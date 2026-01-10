@@ -60,13 +60,17 @@ func (a *App[T]) Handle(state T) {
 	}
 }
 
+func (a *App[T]) Lookup(path Path) (Handler[T], bool) {
+	return a.trie.Lookup(path)
+}
+
 func (a *App[T]) Insert(path Path, handler Handler[T]) {
 	a.trie.Insert(path, handler)
 }
 
 func With[T State](build func(Add[T])) Option[T] {
 	return func(a *App[T]) {
-		build(a.trie.Insert)
+		build(a.Insert)
 	}
 }
 

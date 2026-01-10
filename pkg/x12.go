@@ -5,6 +5,7 @@ import (
 )
 
 type (
+	App         = app.App[Request]
 	Handler     = app.Handler[Request]
 	HandlerFunc = app.HandlerFunc[Request]
 	Option      = app.Option[Request]
@@ -17,7 +18,7 @@ func (r Request) Path() app.Path {
 	return app.Path(r)
 }
 
-func New(options ...Option) Handler {
+func New(options ...Option) *App {
 	return app.New(options...)
 }
 

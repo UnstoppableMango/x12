@@ -75,6 +75,10 @@ func (mux *ServeMux) HandleFunc(path string, handler func(*State)) {
 	mux.Handle(path, HandlerFunc(handler))
 }
 
+func (mux *ServeMux) Handler(state app.State) (Handler, bool) {
+	return mux.app.Lookup(state.Path())
+}
+
 func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request) {
 	mux.app.Handle(&State{Res: w, Req: r})
 }
