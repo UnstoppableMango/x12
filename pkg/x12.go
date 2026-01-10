@@ -7,25 +7,19 @@ import (
 )
 
 type (
-	Action       = app.Action[*Request]
-	ErrorHandler = app.ErrorHandler
-	Handler      = app.Handler[*Request]
-	HandlerFunc  = app.HandlerFunc[*Request]
-	Path         = app.Path
-	Add          = app.Add[*Request]
-	Option       = app.Option[*Request]
-	Builder      func(Add)
+	Action      = app.Action[*State]
+	Handler     = app.Handler[*State]
+	HandlerFunc = app.HandlerFunc[*State]
+	Path        = app.Path
+	Add         = app.Add[*State]
+	Option      = app.Option[*State]
 )
 
-type Request struct {
+type State struct {
 	ctx context.Context
 }
 
-func NewRequest(ctx context.Context) *Request {
-	return &Request{ctx: ctx}
-}
-
-func (r *Request) Context() context.Context {
+func (r *State) Context() context.Context {
 	return r.ctx
 }
 
@@ -33,7 +27,7 @@ func New(options ...Option) Handler {
 	return app.New(options...)
 }
 
-func With(build Builder) Option {
+func With(build func(Add)) Option {
 	return app.With(build)
 }
 

@@ -9,37 +9,40 @@ import (
 )
 
 type (
-	Path               = trie.Key
-	Action[R Req]      func(R) error
-	ErrorHandler       func(Path) error
-	HandlerFunc[R Req] func(Path, R) error
+	Path                 = trie.Key
+	Action[T State]      func(T) error
+	HandlerFunc[T State] func(Path, T) error
 
-	Add[R Req]  = trie.Insert[Path, Action[R]]
-	Trie[R Req] = trie.Trie[Path, Action[R]]
+	Add[T State] = trie.Insert[Path, Action[T]]
 )
 
-type Handler[R Req] interface {
-	Handle(path Path, req R) error
+type Trie[T State] interface {
+	Lookup(Path) (Action[T], bool)
+	Insert(Path, Action[T])
 }
 
-func (handle HandlerFunc[R]) Handle(path Path, req R) error {
-	return handle(path, req)
+type Handler[T State] interface {
+	Handle(path Path, state T) error
 }
 
-type Req interface {
+func (handle HandlerFunc[T]) Handle(path Path, state T) error {
+	return handle(path, state)
+}
+
+type State interface {
 	Context() context.Context
 }
 
-type app[R Req] struct {
-	trie     Trie[R]
-	notFound ErrorHandler
+type App[T State] struct {
+	trie     Trie[T]
+	notFound func(Path) error
 }
 
-type Option[R Req] func(*app[R])
+type Option[T State] func(*App[T])
 
-func New[R Req](options ...Option[R]) Handler[R] {
-	app := &app[R]{
-		trie: trie.New[Action[R]](),
+func New[T State](options ...Option[T]) *App[T] {
+	app := &App[T]{
+		trie: trie.New[Action[T]](),
 		notFound: func(p Path) error {
 			return fmt.Errorf("no route found for path: %s", p)
 		},
@@ -50,24 +53,32 @@ func New[R Req](options ...Option[R]) Handler[R] {
 }
 
 // Handle implements X12.
-func (a *app[R]) Handle(path Path, req R) error {
+func (a *App[T]) Handle(path Path, state T) error {
 	if action, found := a.trie.Lookup(path); found {
-		return action(req)
+		return action(state)
 	} else {
 		return a.notFound(path)
 	}
 }
 
-func With[R Req](build func(Add[R])) Option[R] {
-	return func(a *app[R]) {
+func (a *App[T]) Insert(path Path, action Action[T]) {
+	a.trie.Insert(path, action)
+}
+
+func With[T State](build func(Add[T])) Option[T] {
+	return func(a *App[T]) {
 		build(a.trie.Insert)
 	}
 }
 
-func Handle[R Req](path Path, handler Handler[R]) Option[R] {
-	return With(func(add Add[R]) {
-		add(path, func(req R) error {
-			return handler.Handle(path, req)
+func Handle[T State](path Path, handler Handler[T]) Option[T] {
+	return HandleFunc(path, handler.Handle)
+}
+
+func HandleFunc[T State](path Path, handle HandlerFunc[T]) Option[T] {
+	return With(func(add Add[T]) {
+		add(path, func(state T) error {
+			return handle(path, state)
 		})
 	})
 }
