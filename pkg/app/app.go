@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/unmango/go/option"
@@ -29,7 +28,6 @@ func (handle HandlerFunc[T]) Handle(state T) {
 }
 
 type State interface {
-	Context() context.Context
 	Path() Path
 }
 

@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"net"
 	"net/http"
 
@@ -22,10 +21,6 @@ type (
 type State struct {
 	Res http.ResponseWriter
 	Req *http.Request
-}
-
-func (state *State) Context() context.Context {
-	return state.Req.Context()
 }
 
 func (state *State) Path() app.Path {

@@ -1,33 +1,20 @@
 package x12
 
 import (
-	"context"
-
 	"github.com/unstoppablemango/x12/pkg/app"
 )
 
 type (
-	Handler     = app.Handler[*State]
-	HandlerFunc = app.HandlerFunc[*State]
-	Option      = app.Option[*State]
-	Add         = app.Add[*State]
+	Handler     = app.Handler[Request]
+	HandlerFunc = app.HandlerFunc[Request]
+	Option      = app.Option[Request]
+	Add         = app.Add[Request]
 )
 
-type State struct {
-	ctx  context.Context
-	path string
-}
+type Request string
 
-func NewState(ctx context.Context, path string) *State {
-	return &State{ctx, path}
-}
-
-func (r *State) Context() context.Context {
-	return r.ctx
-}
-
-func (r *State) Path() app.Path {
-	return app.Path(r.path)
+func (r Request) Path() app.Path {
+	return app.Path(r)
 }
 
 func New(options ...Option) Handler {
@@ -42,6 +29,6 @@ func Handle(path string, handler Handler) Option {
 	return app.Handle(app.Path(path), handler)
 }
 
-func HandleFunc(path string, handler func(*State)) Option {
+func HandleFunc(path string, handler func(Request)) Option {
 	return Handle(path, HandlerFunc(handler))
 }
