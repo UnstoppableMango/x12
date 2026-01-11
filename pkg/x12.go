@@ -6,6 +6,7 @@ import (
 	"io"
 	"sync"
 
+	"github.com/unmango/go/option"
 	"github.com/unstoppablemango/x12/pkg/app"
 )
 
@@ -57,9 +58,11 @@ type request struct {
 
 func Req(path string, options ...func(*request)) Request {
 	req := &request{path: path}
-	for _, opt := range options {
-		opt(req)
+	option.ApplyAll(req, options)
+	if req.ctx == nil {
+		req.ctx = context.Background()
 	}
+
 	return req
 }
 
