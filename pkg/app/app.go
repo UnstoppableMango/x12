@@ -87,3 +87,9 @@ func HandleAll[T State](handlers iter.Seq2[Path, Handler[T]]) Option[T] {
 func HandleFunc[T State](path Path, handler HandlerFunc[T]) Option[T] {
 	return Handle(path, handler)
 }
+
+func NotFound[T State](handler func(Path)) Option[T] {
+	return func(app *App[T]) {
+		app.notFound = handler
+	}
+}

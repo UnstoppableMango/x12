@@ -13,7 +13,7 @@ var _ = Describe("Http", func() {
 			mux := http.NewServeMux()
 
 			Expect(mux).NotTo(BeNil())
-			Expect(mux).NotTo(BeEquivalentTo(http.DefaultServeMux))
+			Expect(mux).NotTo(BeIdenticalTo(http.DefaultServeMux))
 		})
 	})
 })
