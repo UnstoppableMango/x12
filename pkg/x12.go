@@ -56,7 +56,11 @@ type request struct {
 }
 
 func Req(path string, options ...func(*request)) Request {
-	return &request{path: path}
+	req := &request{path: path}
+	for _, opt := range options {
+		opt(req)
+	}
+	return req
 }
 
 func (r *request) Context() context.Context {

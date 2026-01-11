@@ -46,7 +46,7 @@ var _ = Describe("X12", func() {
 		Expect(flagB).To(BeTrue())
 	})
 
-	It("should handle requests on different paths", func() {
+	It("should count requests per path independently", func() {
 		var ca, cb int
 		app := x12.New(
 			x12.HandleFunc("/a", func(s x12.Request) {
@@ -90,7 +90,7 @@ var _ = Describe("X12", func() {
 		Expect(string(data)).To(Equal("Testing"))
 	})
 
-	It("should bring reciepts for the README", func() {
+	It("should bring receipts for the README", func() {
 		app := x12.New(x12.HandleFunc("/user", func(req x12.Request) {
 			if _, err := io.WriteString(req, "Hello World!"); err != nil {
 				panic(err)
