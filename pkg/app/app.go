@@ -40,13 +40,7 @@ type App[T State] struct {
 type Option[T State] func(*App[T])
 
 func New[T State](options ...Option[T]) *App[T] {
-	app := &App[T]{
-		trie: trie.New[Handler[T]](),
-		notFound: func(p Path) {
-			panic(fmt.Sprintf("no route found for path: %s", p))
-		},
-	}
-
+	app := &App[T]{trie: trie.New[Handler[T]]()}
 	option.ApplyAll(app, options)
 	return app
 }
@@ -55,8 +49,10 @@ func (a *App[T]) Handle(state T) {
 	path := state.Path()
 	if handler, found := a.trie.Lookup(path); found {
 		handler.Handle(state)
-	} else {
+	} else if a.notFound != nil {
 		a.notFound(path)
+	} else {
+		panic(fmt.Sprintf("no route found for path: %s", path))
 	}
 }
 
