@@ -1,6 +1,10 @@
 package app
 
-import "iter"
+import (
+	"iter"
+
+	"github.com/unmango/go/option"
+)
 
 type (
 	Insert[T Request] func(Path, Handler[T])
@@ -11,6 +15,12 @@ func Builder[T Request](build func(Insert[T])) Option[T] {
 	return func(a *App[T]) {
 		build(a.trie.Insert)
 	}
+}
+
+func From[T Request](trie Trie[T], options ...Option[T]) *App[T] {
+	app := &App[T]{trie: trie}
+	option.ApplyAll(app, options)
+	return app
 }
 
 func Handle[T Request](path Path, handler Handler[T]) Option[T] {

@@ -2,16 +2,14 @@ package app
 
 import (
 	"fmt"
-
-	"github.com/unmango/go/option"
-	"github.com/unstoppablemango/x12/pkg/trie"
+	"iter"
 )
+
+type Path = key // []byte
 
 type Request interface {
 	Path() Path
 }
-
-type Path = trie.Key
 
 type HandlerFunc[T Request] func(T)
 
@@ -20,7 +18,7 @@ func (handle HandlerFunc[T]) Handle(req T) {
 }
 
 type Trie[T Request] interface {
-	CopyTo(func(Path, Handler[T]))
+	Iter() iter.Seq2[Path, Handler[T]]
 	Lookup(Path) (Handler[T], bool)
 	Insert(Path, Handler[T])
 }
@@ -35,13 +33,7 @@ type App[T Request] struct {
 }
 
 func New[T Request](options ...Option[T]) *App[T] {
-	return From(trie.New[Handler[T]](), options...)
-}
-
-func From[T Request](trie Trie[T], options ...Option[T]) *App[T] {
-	app := &App[T]{trie: trie}
-	option.ApplyAll(app, options)
-	return app
+	return From(NewTrie[Handler[T]](), options...)
 }
 
 func (app *App[T]) Handle(req T) {
