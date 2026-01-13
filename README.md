@@ -9,14 +9,16 @@ Package [x12](./pkg/x12.go) implements a rudimentary request handler using `app`
 Package [http](./pkg/http/http.go) implements a thin adapter for [net/http](https://pkg.go.dev/net/http) to demonstrate how the request model maps across domains.
 
 ```go
-app := x12.New(x12.HandleFunc("/user", func(req x12.Request) {
+app := x12.New(x12.HandleFunc("/user", func(req x12.Request) error {
 	if _, err := io.WriteString(req, "Hello World!"); err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }))
 
 req := x12.Req("/user")
 app.Handle(req)
+
 data, _ := io.ReadAll(req)
 Expect(string(data)).To(Equal("Hello World!"))
 ```

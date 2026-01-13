@@ -11,7 +11,7 @@ import (
 )
 
 type Request interface {
-	app.State
+	app.Request
 	io.Reader
 	io.Writer
 
@@ -20,26 +20,38 @@ type Request interface {
 }
 
 type (
-	App         = app.App[Request]
-	Handler     = app.Handler[Request]
-	HandlerFunc = app.HandlerFunc[Request]
-	Option      = app.Option[Request]
-	Add         = app.Add[Request]
+	App    = app.App[Request]
+	Option = app.Option[Request]
+	Insert = app.Insert[Request]
 )
+
+type Handler interface {
+	Handle(Request) error
+}
+
+type HandlerFunc func(Request) error
+
+func (handle HandlerFunc) Handle(req Request) error {
+	return handle(req)
+}
 
 func New(options ...Option) *App {
 	return app.New(options...)
 }
 
-func With(build func(Add)) Option {
-	return app.With(build)
+func Builder(build func(Insert)) Option {
+	return app.Builder(build)
 }
 
 func Handle(path string, handler Handler) Option {
-	return app.Handle(app.Path(path), handler)
+	return app.HandleFunc(app.Path(path), func(req Request) {
+		if err := handler.Handle(req); err != nil {
+			req.Err(err)
+		}
+	})
 }
 
-func HandleFunc(path string, handler func(Request)) Option {
+func HandleFunc(path string, handler func(Request) error) Option {
 	return Handle(path, HandlerFunc(handler))
 }
 
@@ -54,6 +66,7 @@ type request struct {
 	path string
 	ctx  context.Context
 	buf  bytes.Buffer
+	err  func(error)
 }
 
 func Req(path string, options ...func(*request)) Request {
@@ -66,28 +79,30 @@ func Req(path string, options ...func(*request)) Request {
 	return req
 }
 
-func (r *request) Context() context.Context {
-	return r.ctx
+func (req *request) Context() context.Context {
+	return req.ctx
 }
 
-func (r *request) Path() app.Path {
-	return app.Path(r.path)
+func (req *request) Path() app.Path {
+	return app.Path(req.path)
 }
 
-func (r *request) Read(p []byte) (int, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.buf.Read(p)
+func (req *request) Read(p []byte) (int, error) {
+	req.mu.RLock()
+	defer req.mu.RUnlock()
+	return req.buf.Read(p)
 }
 
-func (r *request) Write(p []byte) (int, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.buf.Write(p)
+func (req *request) Write(p []byte) (int, error) {
+	req.mu.Lock()
+	defer req.mu.Unlock()
+	return req.buf.Write(p)
 }
 
-func (r *request) Err(err error) {
-	if _, err := r.Write([]byte(err.Error())); err != nil {
+func (req *request) Err(err error) {
+	if req.err != nil {
+		req.err(err)
+	} else {
 		panic(err)
 	}
 }
@@ -96,4 +111,40 @@ func WithContext(ctx context.Context) func(*request) {
 	return func(req *request) {
 		req.ctx = ctx
 	}
+}
+
+func WithErrorHandler(handler func(error)) func(*request) {
+	return func(req *request) {
+		req.err = handler
+	}
+}
+
+func Run(app *App, requests <-chan Request) error {
+	return RunContext(context.Background(), app, requests)
+}
+
+func RunContext(ctx context.Context, app *App, requests <-chan Request) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case req := <-requests:
+			app.Handle(req)
+		}
+	}
+}
+
+func Start(app *App) chan<- Request {
+	return StartContext(context.Background(), app)
+}
+
+func StartContext(ctx context.Context, app *App) chan<- Request {
+	requests := make(chan Request)
+	go func() {
+		if err := RunContext(ctx, app, requests); err != nil {
+			panic(err)
+		}
+	}()
+
+	return requests
 }

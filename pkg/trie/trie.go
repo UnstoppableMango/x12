@@ -6,12 +6,7 @@ import (
 	art "github.com/plar/go-adaptive-radix-tree/v2"
 )
 
-type (
-	Key = art.Key
-
-	Lookup[K, T any] func(K) (T, bool)
-	Insert[K, T any] func(K, T)
-)
+type Key = art.Key
 
 type Trie[T any] struct{ tree art.Tree }
 
@@ -19,9 +14,9 @@ func New[T any]() *Trie[T] {
 	return &Trie[T]{art.New()}
 }
 
-func (t *Trie[T]) CopyTo(other *Trie[T]) {
+func (t *Trie[T]) CopyTo(insert func(Key, T)) {
 	for k, v := range t.Iter() {
-		other.Insert(k, v)
+		insert(k, v)
 	}
 }
 

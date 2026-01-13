@@ -2,94 +2,63 @@ package app
 
 import (
 	"fmt"
-	"iter"
 
 	"github.com/unmango/go/option"
 	"github.com/unstoppablemango/x12/pkg/trie"
 )
 
-type (
-	Path         = trie.Key
-	Add[T State] = trie.Insert[Path, Handler[T]]
-)
+type Request interface {
+	Path() Path
+}
 
-type Trie[T State] interface {
+type Path = trie.Key
+
+type HandlerFunc[T Request] func(T)
+
+func (handle HandlerFunc[T]) Handle(req T) {
+	handle(req)
+}
+
+type Trie[T Request] interface {
+	CopyTo(func(Path, Handler[T]))
 	Lookup(Path) (Handler[T], bool)
 	Insert(Path, Handler[T])
 }
 
-type Handler[T State] interface {
+type Handler[T Request] interface {
 	Handle(state T)
 }
 
-type HandlerFunc[T State] func(T)
-
-func (handle HandlerFunc[T]) Handle(state T) {
-	handle(state)
-}
-
-type State interface {
-	Path() Path
-}
-
-type App[T State] struct {
+type App[T Request] struct {
 	trie     Trie[T]
 	notFound func(Path)
 }
 
-type Option[T State] func(*App[T])
+func New[T Request](options ...Option[T]) *App[T] {
+	return From(trie.New[Handler[T]](), options...)
+}
 
-func New[T State](options ...Option[T]) *App[T] {
-	app := &App[T]{trie: trie.New[Handler[T]]()}
+func From[T Request](trie Trie[T], options ...Option[T]) *App[T] {
+	app := &App[T]{trie: trie}
 	option.ApplyAll(app, options)
 	return app
 }
 
-func (a *App[T]) Handle(state T) {
-	path := state.Path()
-	if handler, found := a.trie.Lookup(path); found {
-		handler.Handle(state)
-	} else if a.notFound != nil {
-		a.notFound(path)
+func (app *App[T]) Handle(req T) {
+	path := req.Path()
+	if handler, found := app.trie.Lookup(path); found {
+		handler.Handle(req)
+	} else if app.notFound != nil {
+		app.notFound(path)
 	} else {
 		panic(fmt.Sprintf("no route found for path: %s", path))
 	}
 }
 
-func (a *App[T]) Lookup(path Path) (Handler[T], bool) {
-	return a.trie.Lookup(path)
+func (app *App[T]) Lookup(path Path) (Handler[T], bool) {
+	return app.trie.Lookup(path)
 }
 
-func (a *App[T]) Insert(path Path, handler Handler[T]) {
-	a.trie.Insert(path, handler)
-}
-
-func With[T State](build func(Add[T])) Option[T] {
-	return func(a *App[T]) {
-		build(a.Insert)
-	}
-}
-
-func Handle[T State](path Path, handler Handler[T]) Option[T] {
-	return With(func(add Add[T]) {
-		add(path, handler)
-	})
-}
-
-func HandleAll[T State](handlers iter.Seq2[Path, Handler[T]]) Option[T] {
-	return With(func(add Add[T]) {
-		for p, h := range handlers {
-			add(p, h)
-		}
-	})
-}
-
-func HandleFunc[T State](path Path, handler HandlerFunc[T]) Option[T] {
-	return Handle(path, handler)
-}
-
-func NotFound[T State](handler func(Path)) Option[T] {
-	return func(app *App[T]) {
-		app.notFound = handler
-	}
+func (app *App[T]) With(options ...Option[T]) *App[T] {
+	return From(app.trie, options...)
 }

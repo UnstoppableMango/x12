@@ -24,7 +24,7 @@ type State struct {
 }
 
 func (state *State) Path() app.Path {
-	return app.Path(state.Req.RequestURI)
+	return app.Path(state.Req.URL.String())
 }
 
 func Handle(path string, handler Handler) {
@@ -68,17 +68,25 @@ func NewServeMux() *ServeMux {
 }
 
 func (mux *ServeMux) Handle(path string, handler Handler) {
-	mux.app.Insert(app.Path(path), handler)
+	mux.app = mux.app.With(app.Handle(app.Path(path), handler))
 }
 
 func (mux *ServeMux) HandleFunc(path string, handler func(*State)) {
 	mux.Handle(path, HandlerFunc(handler))
 }
 
-func (mux *ServeMux) Handler(state app.State) (Handler, bool) {
-	return mux.app.Lookup(state.Path())
+func (mux *ServeMux) Handler(req app.Request) (Handler, bool) {
+	return mux.app.Lookup(req.Path())
 }
 
-func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request) {
-	mux.app.Handle(&State{Res: w, Req: r})
+func (mux *ServeMux) ServeHTTP(w ResponseWriter, req *Request) {
+	mux.app.Handle(&State{Res: w, Req: req})
+}
+
+func FromMap(handlers map[string]Handler) *ServeMux {
+	mux := NewServeMux()
+	for path, handler := range handlers {
+		mux.Handle(path, handler)
+	}
+	return mux
 }

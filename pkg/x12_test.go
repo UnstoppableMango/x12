@@ -18,8 +18,9 @@ var _ = Describe("X12", func() {
 
 	It("should handle requests", func() {
 		var flag bool
-		app := x12.New(x12.HandleFunc("/", func(s x12.Request) {
+		app := x12.New(x12.HandleFunc("/", func(s x12.Request) error {
 			flag = true
+			return nil
 		}))
 
 		app.Handle(x12.Req("/"))
@@ -30,11 +31,13 @@ var _ = Describe("X12", func() {
 	It("should handle requests on different paths", func() {
 		var flagA, flagB bool
 		app := x12.New(
-			x12.HandleFunc("/a", func(s x12.Request) {
+			x12.HandleFunc("/a", func(s x12.Request) error {
 				flagA = true
+				return nil
 			}),
-			x12.HandleFunc("/b", func(s x12.Request) {
+			x12.HandleFunc("/b", func(s x12.Request) error {
 				flagB = true
+				return nil
 			}),
 		)
 
@@ -46,14 +49,16 @@ var _ = Describe("X12", func() {
 		Expect(flagB).To(BeTrue())
 	})
 
-	It("should count requests per path independently", func() {
+	It("should independantly handle requests", func() {
 		var ca, cb int
 		app := x12.New(
-			x12.HandleFunc("/a", func(s x12.Request) {
+			x12.HandleFunc("/a", func(s x12.Request) error {
 				ca++
+				return nil
 			}),
-			x12.HandleFunc("/b", func(s x12.Request) {
+			x12.HandleFunc("/b", func(s x12.Request) error {
 				cb++
+				return nil
 			}),
 		)
 
@@ -75,30 +80,17 @@ var _ = Describe("X12", func() {
 		Expect(cb).To(Equal(3))
 	})
 
-	It("should handle IO", func() {
-		app := x12.New(x12.HandleFunc("/test", func(s x12.Request) {
-			if _, err := io.WriteString(s, "Testing"); err != nil {
-				panic(err)
-			}
-		}))
-		req := x12.Req("/test")
-
-		app.Handle(req)
-
-		data, err := io.ReadAll(req)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(string(data)).To(Equal("Testing"))
-	})
-
 	It("should bring receipts for the README", func() {
-		app := x12.New(x12.HandleFunc("/user", func(req x12.Request) {
+		app := x12.New(x12.HandleFunc("/user", func(req x12.Request) error {
 			if _, err := io.WriteString(req, "Hello World!"); err != nil {
-				panic(err)
+				return err
 			}
+			return nil
 		}))
 
 		req := x12.Req("/user")
 		app.Handle(req)
+
 		data, err := io.ReadAll(req)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(string(data)).To(Equal("Hello World!"))
