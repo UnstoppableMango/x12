@@ -1,3 +1,5 @@
+<!-- markdownlint-configure-file { "no-hard-tabs": { "ignore_code_languages": [ "go" ] } } -->
+
 # x12
 
 A micro-framework for building invocable strings in Go.
