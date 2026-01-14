@@ -7,7 +7,7 @@ import (
 )
 
 type Request interface {
-	app.State
+	app.Request
 
 	Err(error)
 }

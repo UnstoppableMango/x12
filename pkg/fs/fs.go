@@ -9,7 +9,7 @@ import (
 
 type Request interface {
 	fmt.Stringer
-	app.State
+	app.Request
 
 	Err(error)
 	Op() Op
