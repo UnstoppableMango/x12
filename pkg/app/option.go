@@ -3,7 +3,7 @@ package app
 import (
 	"iter"
 
-	"github.com/unmango/go/option"
+	"github.com/unmango/go/fopt"
 )
 
 type (
@@ -19,7 +19,7 @@ func Builder[T Request](build func(Insert[T])) Option[T] {
 
 func From[T Request](trie Trie[T], options ...Option[T]) *App[T] {
 	app := &App[T]{trie: trie}
-	option.ApplyAll(app, options)
+	fopt.ApplyAll(app, options)
 	return app
 }
 
