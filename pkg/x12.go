@@ -6,7 +6,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/unmango/go/option"
+	"github.com/unmango/go/fopt"
 	"github.com/unstoppablemango/x12/pkg/app"
 )
 
@@ -71,7 +71,7 @@ type request struct {
 
 func Req(path string, options ...func(*request)) Request {
 	req := &request{path: path}
-	option.ApplyAll(req, options)
+	fopt.ApplyAll(req, options)
 	if req.ctx == nil {
 		req.ctx = context.Background()
 	}
