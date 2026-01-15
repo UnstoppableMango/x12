@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 
-	"github.com/unmango/go/option"
+	"github.com/unmango/go/fopt"
 	"github.com/unstoppablemango/x12/pkg/app"
 )
 
@@ -30,11 +30,13 @@ type FS struct{ Opener }
 
 func New(options ...Option) fs.FS {
 	fs := &FS{}
-	option.ApplyAll(fs, options)
+	fopt.ApplyAll(fs, options)
 	return fs
 }
 
 func (f *FS) Open(name string) (fs.File, error) {
+	// Implementations of FS must reject invalid paths.
+	// https://pkg.go.dev/io/fs#FS
 	if !fs.ValidPath(name) {
 		return nil, f.pathErr(name, fs.ErrInvalid)
 	}
