@@ -1,4 +1,4 @@
 .direnv/
 .envrc
 *.test
-result
+/result
