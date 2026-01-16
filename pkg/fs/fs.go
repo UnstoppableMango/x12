@@ -14,9 +14,10 @@ type Request interface {
 }
 
 type (
-	Handler = app.Handler[Request]
-	Opener  = app.Handler[OpenRequest]
-	Option  = func(*FS)
+	FileInfo = fs.FileInfo
+	Handler  = app.Handler[Request]
+	Opener   = app.Handler[OpenRequest]
+	Option   = func(*FS)
 )
 
 type OpenRequest interface {

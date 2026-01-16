@@ -1,10 +1,14 @@
 package result
 
 import (
+	"github.com/unmango/go/either/result"
 	"github.com/unstoppablemango/x12/pkg/app"
 )
 
-type Path = app.Path
+type (
+	Path          = app.Path
+	Result[T any] = result.Result[T]
+)
 
 type Request[T any] interface {
 	app.Request
@@ -35,4 +39,12 @@ func Handle[Res any, Req Request[Res]](path Path, handler Handler[Res, Req]) app
 
 func HandleFunc[Res any, Req Request[Res]](path Path, handler func(Req) (Res, error)) app.Option[Req] {
 	return Handle(path, HandlerFunc[Res, Req](handler))
+}
+
+func Error[T any](err error) Result[T] {
+	return result.Error[T](err)
+}
+
+func Ok[T any](val T) Result[T] {
+	return result.Ok(val)
 }
