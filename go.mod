@@ -8,7 +8,7 @@ tool (
 )
 
 require (
-	github.com/onsi/ginkgo/v2 v2.29.0
+	github.com/onsi/ginkgo/v2 v2.33.0
 	github.com/onsi/gomega v1.41.0
 	github.com/plar/go-adaptive-radix-tree/v2 v2.0.4
 	github.com/unmango/go v0.16.6
