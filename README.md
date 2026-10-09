@@ -2,6 +2,8 @@
 
 # x12
 
+[![Hercules CI](https://hercules-ci.com/api/v1/site/github/account/UnstoppableMango/project/x12/badge)](https://hercules-ci.com/github/UnstoppableMango/x12)
+
 A micro-framework for building invocable strings in Go.
 
 Probably the same as something that exists, I didn't search very hard beforehand.
